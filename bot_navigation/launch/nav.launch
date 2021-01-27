@@ -1,0 +1,28 @@
+<launch>
+
+        <arg name="map_file" default="$(find bot_navigation)/maps/sample_world.yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+
+    <!-- including launch file for localization using AMCL -->
+    <include file="$(find bot_navigation)/launch/amcl.launch" />
+
+  
+      <!-- Move base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find bot_navigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find bot_navigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find bot_navigation)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find bot_navigation)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find bot_navigation)/config/base_local_planner.yaml" command="load" />
+    <param name="planner_frequency" value="8.0"/>
+    <param name="controller_frequency" value="8.0"/>
+    <param name="planner_patience" value="5.0"/>
+    <param name="max_planner_retries" value="38"/>
+
+
+    <param name="move_base/DWAPlannerROS/yaw_goal_tolerance" value="1.0"/>
+    <param name="move_base/DWAPlannerROS/xy_goal_tolerance" value="1.0"/>
+
+  </node>
+
+</launch>

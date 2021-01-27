@@ -1,6 +1,7 @@
-<sdf version='1.6'>
-  <world name='default'>
-    <model name='ground_plane'>
+<?xml version="1.0"?>
+  <sdf version='1.6'>
+   <world name='default'>
+    <!--model name='ground_plane'>
       <static>1</static>
       <link name='link'>
         <collision name='collision'>
@@ -47,7 +48,7 @@
         <enable_wind>0</enable_wind>
         <kinematic>0</kinematic>
       </link>
-    </model>
+    </model-->
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose frame=''>0 0 10 0 -0 0</pose>
