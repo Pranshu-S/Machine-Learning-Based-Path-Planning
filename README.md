@@ -1,4 +1,4 @@
-# ML-BOT
+# ML-BOT - ROS IMPLEMENTATION
 
 ## Phase 1
 
