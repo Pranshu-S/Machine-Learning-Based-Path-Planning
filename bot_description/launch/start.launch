@@ -1,8 +1,8 @@
 <launch>
 <arg name="model" default="waffle" doc="model type [burger, waffle, waffle_pi]"/>
-  <arg name="x_pos" default="0.0"/>
-  <arg name="y_pos" default="0.0"/>
-  <arg name="z_pos" default="0.0"/>
+  <arg name="x_pos" default="-0.641503"/>
+  <arg name="y_pos" default="3.664050"/>
+  <arg name="z_pos" default="0.5"/>
   <arg name="slam_methods" default="gmapping" doc="slam type [gmapping, cartographer, hector, karto, frontier_exploration]"/>
   <arg name="configuration_basename" default="turtlebot3_lds_2d.lua"/>
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(find bot_description)/urdf/turtlebot3_waffle.urdf.xacro" />
@@ -17,16 +17,21 @@
 
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model turtlebot3 -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
 
-  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+  <!-- <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/> -->
+
+  <include file="$(find bot_navigation)/launch/nav.launch"/>
+
 
   <!-- AMCL -->
-  <include file="$(find turtlebot3_navigation)/launch/amcl.launch"/>
+  <!-- <include file="$(find bot_navigation)/launch/amcl.launch"/> -->
 
   <!-- move_base -->
-  <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
+  <!-- <include file="$(find turtlebot3_navigation)/launch/move_base.launch">
     <arg name="model" value="$(arg model)" />
     <arg name="move_forward_only" value="$(arg move_forward_only)"/>
-  </include>
+  </include> -->
+	
+  <include file="$(find detect_2d)/launch/detect2d.launch" />
 
 
    <!-- <include file="$(find bot_navigation)/launch/nav.launch" /> -->

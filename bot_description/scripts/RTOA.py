@@ -15,6 +15,13 @@ from nav_msgs.msg import Odometry
 
 bridge = CvBridge()
 
+# object_detected = 
+
+# #bowl = 1
+# #MR =2 
+# #Tyre = 3
+# #Qc = 4
+
 def image_callback(ros_image):
 
 
@@ -44,6 +51,7 @@ def image_callback(ros_image):
             cv2.putText(cv_image,'Bowl',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
             #roi_gray = gray[y:y+h, x:x+w]
             roi_color = cv_image[y:y+h, x:x+w]
+            object_detected = 1
             
         MR = MR_cascade.detectMultiScale(cv_image, 1.3, 5)
         for (x,y,w,h) in MR:

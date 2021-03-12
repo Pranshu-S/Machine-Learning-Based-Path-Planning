@@ -1,0 +1,8 @@
+prefix=/home/ros/IEEE/src/build/devel
+
+Name: detect_2d
+Description: Description of detect_2d
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
