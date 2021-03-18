@@ -36,6 +36,10 @@ wheel_cascade = cv2.CascadeClassifier('/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/
 # Import Model
 model= load_model('/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/CNN/CNN.h5')
 
+# Create CvBridge
+bridge = CvBridge()
+
+
 #Initialize Values
 class_i=-1
 class_x=-1
@@ -98,16 +102,20 @@ def find_obj(RGB_IMG):
 
     # Convert ros_image into an opencv-compatible image
     try:
-        cv_image = bridge.imgmsg_to_cv2(ros_image, "bgr8")
+        cv_image = bridge.imgmsg_to_cv2(RGB_IMG, "bgr8")
     except CvBridgeError as e:
         print(e)
+
+    # Convert to Numpy Array
+    image_recieved0 = np.array(cv_image)
+    image_recieved = np.array(cv_image)
 
     # Resize Image
     image_recieved= tf.image.resize(image_recieved,[224,224])
     image_recieved2=tf.reshape(image_recieved,[1,224,224,3])
 
     #Predict
-    predictions= model.predict(image_recieved2)
+    predictions= model.predict(image_recieved2, steps = 1)
     classNo1=model.predict_classes(image_recieved2)
     probabilityValue= np.amax(predictions)
     classNo=classNo1.tolist()
@@ -176,7 +184,7 @@ def find_distance(DEPTH_IMG, x, y):
 
     # Get image data
     try:
-        depth_image = bridge.imgmsg_to_cv2(depth_data, "32FC1")
+        depth_image = bridge.imgmsg_to_cv2(DEPTH_IMG, "32FC1")
     except CvBridgeError, e:
         print e
 
@@ -195,20 +203,21 @@ def main():
 
     # Rotate to Detect Nearby Objects
     for i in range(36):
-        rotate_bot()
-        print("Rotated 10 Degrees")
-        rospy.sleep(1)
+        # rotate_bot()
+        # print("Rotated 10 Degrees")
+        # rospy.sleep(1)
 
         #Get RGB and Depth Data
-        RGB = rospy.wait_for_message('/camera/rgb/image_raw"', Image)
+        RGB = rospy.wait_for_message('/camera/rgb/image_raw', Image)
 
         #Find Objects if Available
         result = find_obj(RGB)
 
         if result[0] != -1:
-            Depth = rospy.wait_for_message('/camera/depth/image_raw"', Image)
-            find_distance(Depth, result[1] + result[3]/2, result[2] + result[4]/2)
+            Depth = rospy.wait_for_message('/camera/depth/image_raw', Image)
+            result_distance = find_distance(Depth, result[1] + result[3]/2, result[2] + result[4]/2)
 
+        print(find_distance)
 
 # Pose Estimation
     print(angle_bw,distance_qc,distance_rover)

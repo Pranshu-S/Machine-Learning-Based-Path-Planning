@@ -37,7 +37,6 @@ def image_callback(ros_image):
         cv_image = bridge.imgmsg_to_cv2(ros_image, "bgr8")
     except CvBridgeError as e:
         print(e)
-<<<<<<< HEAD
     cv2.imshow("Image window", cv_image)
     cv2.waitKey(0)
     path = __file__ + '/' + image_name + ".jpg"
@@ -57,31 +56,20 @@ def image_callback2(ros_image):
         cv_image = bridge.imgmsg_to_cv2(ros_image)
     except CvBridgeError as e:
         print(e)
-=======
->>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
     #from now on, you can work exactly like with opencv
     cv2.imshow("Image window", cv_image)
     cv2.waitKey(0)
     path = __file__ + '/' + image_name + ".jpg"
-<<<<<<< HEAD
     # print path
     x = cv2.imwrite('/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/images/' + image_name + ".jpg", cv_image)
     print(x)
-=======
-    print path
-    cv2.imwrite('/home/ros/IEEE/src/bot_description/images/' + image_name + ".jpg", cv_image)
-
->>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
   
 def main(args):
     cv2.destroyAllWindows()
     rospy.init_node('image_listener', anonymous=True)
     rospy.Subscriber('/odom', Odometry, odom_callback)
     rospy.Subscriber("/camera/rgb/image_raw",Image, image_callback)
-<<<<<<< HEAD
     rospy.Subscriber("/camera/depth/image_raw",Image, image_callback2)
-=======
->>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
     rospy.spin()
     cv2.destroyAllWindows()
 

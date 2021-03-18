@@ -22,9 +22,9 @@ import warnings
 warnings.simplefilter(action='ignore',category=FutureWarning)
 # %matplotlib inline
 
-train_path='/home/ros/IEEE/src/bot_description/training/data/train'
-test_path='/home/ros/IEEE/src/bot_description/training/data/test'
-valid_path='/home/ros/IEEE/src/bot_description/training/data/validation'
+train_path='/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/training/data/train'
+test_path='/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/training/data/test'
+valid_path='/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/training/data/validation'
 
 train_batches=ImageDataGenerator().flow_from_directory(train_path, target_size=(224,224), classes=['0','1','2','3'], batch_size=10)
 test_batches=ImageDataGenerator().flow_from_directory(test_path, target_size=(224,224), classes=['0','1','2','3'], batch_size=10)

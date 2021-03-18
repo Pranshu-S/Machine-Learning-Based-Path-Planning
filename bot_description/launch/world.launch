@@ -8,11 +8,7 @@
   <arg name="debug" default="false"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-<<<<<<< HEAD
      <arg name="world_name" value="$(find ebot_gazebo)/worlds/Test1.world"/>
-=======
-     <arg name="world_name" value="$(find bot_description)/worlds/Test1.world"/>
->>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
     <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="gui" value="$(arg gui)"/>
