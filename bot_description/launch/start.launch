@@ -31,7 +31,11 @@
     <arg name="move_forward_only" value="$(arg move_forward_only)"/>
   </include> -->
 	
+<<<<<<< HEAD
   <!-- <include file="$(find detect_2d)/launch/detect2d.launch" /> -->
+=======
+  <include file="$(find detect_2d)/launch/detect2d.launch" />
+>>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
 
 
    <!-- <include file="$(find bot_navigation)/launch/nav.launch" /> -->

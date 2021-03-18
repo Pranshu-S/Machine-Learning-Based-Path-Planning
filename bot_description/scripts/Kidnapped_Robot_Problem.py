@@ -16,9 +16,13 @@ import copy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
+<<<<<<< HEAD
 # from scipy.optimize import fsolve
 
 bridge = CvBridge()
+=======
+from scipy.optimize import fsolve
+>>>>>>> 23c31a3014efcdd6a36a8a3070c71cb3fb65c399
 
 # Brings in the SimpleActionClient
 import actionlib
