@@ -15,7 +15,7 @@ import copy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
-# from scipy.optimize import fsolve
+from scipy.optimize import fsolve
 
 # Brings in the SimpleActionClient
 import actionlib
@@ -26,6 +26,14 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 # For initialization and storing of Pose
 global pose
 pose = [0, 0, 0]
+
+# Distance inf
+global distance_to_rover
+global distance_to_qc
+
+distance_to_rover = 100000
+distance_to_qc = 100000
+
 
 # Import Cascades
 bowl_cascade = cv2.CascadeClassifier('/home/pranshu/ROS_WORKSPACES/IEEE_P1/src/bot_description/cascades/bowl_cascade.xml')
@@ -53,10 +61,10 @@ qc = [-2.805357, 4.368702, 0]
 
 # Solve Equations
 def equations(p):
-    global distance_qc
-    global distance_rover
+    global distance_to_qc
+    global distance_to_rover
     x, y = p
-    return ((rover[1] - x)**2 + (rover[0] - y)**2 - distance_rover**2, (qc[1] - x)**2 + (qc[0] - y)**2 - distance_qc**2)
+    return ((rover[1] - x)**2 + (rover[0] - y)**2 - distance_to_rover**2, (qc[1] - x)**2 + (qc[0] - y)**2 - distance_to_qc**2)
 
 # Callback for odometry readings 
 def odom_callback(data):
@@ -66,6 +74,19 @@ def odom_callback(data):
     z = data.pose.pose.orientation.z
     w = data.pose.pose.orientation.w
     pose = [data.pose.pose.position.x, data.pose.pose.position.y, euler_from_quaternion([x,y,z,w])[2]]
+
+global rgb
+
+# Callback for rbg img
+def rgb_callback(data):
+    global rgb
+    rgb = data
+
+global depth
+
+def depth_callback(data):
+    global depth
+    depth = data
 
 # Rotate bot to a small extent (10 Degrees)
 def rotate_bot():
@@ -97,12 +118,14 @@ def rotate_bot():
     pub.publish(velocity_msg)
 
 # Detech and measure distance from the object using depth map
-def find_obj(RGB_IMG):
+def find_obj():
+
     global bridge
+    global rgb
 
     # Convert ros_image into an opencv-compatible image
     try:
-        cv_image = bridge.imgmsg_to_cv2(RGB_IMG, "bgr8")
+        cv_image = bridge.imgmsg_to_cv2(rgb, "bgr8")
     except CvBridgeError as e:
         print(e)
 
@@ -110,81 +133,53 @@ def find_obj(RGB_IMG):
     image_recieved0 = np.array(cv_image)
     image_recieved = np.array(cv_image)
 
-    # Resize Image
-    image_recieved= tf.image.resize(image_recieved,[224,224])
-    image_recieved2=tf.reshape(image_recieved,[1,224,224,3])
-
-    #Predict
-    predictions= model.predict(image_recieved2, steps = 1)
-    classNo1=model.predict_classes(image_recieved2)
-    probabilityValue= np.amax(predictions)
-    classNo=classNo1.tolist()
-
-    # Check which object identified
-    if classNo[0] is 1:
-        bowl = bowl_cascade.detectMultiScale(image_recieved0, 1.3, 5)
-        for (x,y,w,h) in bowl:
-            cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(255,0,255),2)
-            cv2.putText(image_recieved0,'Bowl',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
-            #roi_gray = gray[y:y+h, x:x+w]
-            roi_color = img_x[y:y+h, x:x+w]
-            cv2.imshow("result",image_recieved0)
-            # cv2.waitKey(0)
-            cv2.destroyAllWindows() 
-            ans=[classNo[0],x,y,w,h]
-
     # If Mars Rover Identified
-    if classNo[0] is 3:
-        MR = MR_cascade.detectMultiScale(image_recieved0, 1.3, 5)
-        for (x,y,w,h) in MR:
-            cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(255,0,0),2)
-            cv2.putText(image_recieved0,'MR',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
-            #roi_gray = gray[y:y+h, x:x+w]
-            roi_color = image_recieved[y:y+h, x:x+w]
+    MR = MR_cascade.detectMultiScale(image_recieved0, 1.3, 5)
+    for (x,y,w,h) in MR:
+        cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(255,0,0),2)
+        cv2.putText(image_recieved0,'MR',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
+        #roi_gray = gray[y:y+h, x:x+w]
+        roi_color = image_recieved[y:y+h, x:x+w]
+
+        if w>400:
             cv2.imshow('result',image_recieved0)
-            cv2.waitKey(0)
+            cv2.waitKey(500)
             cv2.destroyAllWindows()
-            ans=[classNo[0],x,y,w,h]
+
+        ans=[3,x,y,w,h]
+        # print(ans)
+        return ans
 
     # If QuadCopter identified
-    if classNo[0] is 0:
-        QC = QC_cascade.detectMultiScale(image_recieved0, 1.3, 5)
-        for (x,y,w,h) in QC:
-            cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(0,0,255),2)
-            cv2.putText(image_recieved0,'QC',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
-            #roi_gray = gray[y:y+h, x:x+w]
-            roi_color = image_recieved[y:y+h, x:x+w]
+    QC = QC_cascade.detectMultiScale(image_recieved0, 1.3, 5)
+    for (x,y,w,h) in QC:
+        cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(0,0,255),2)
+        cv2.putText(image_recieved0,'QC',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
+        #roi_gray = gray[y:y+h, x:x+w]
+        roi_color = image_recieved[y:y+h, x:x+w]
+        if w>400:
             cv2.imshow('result',image_recieved0)
-            # cv2.waitKey(0)
+            cv2.waitKey(500)
             cv2.destroyAllWindows()
-            ans=[classNo[0],x,y,w,h]
-
-    # If wheel identified
-    if classNo[0] is 2:
-        Wheel = wheel_cascade.detectMultiScale(image_recieved0, 1.3, 5)
-        for (x,y,w,h) in Wheel:
-            cv2.rectangle(image_recieved0,(x,y),(x+w,y+h),(255,255,0),2)
-            cv2.putText(image_recieved0,'Wheel',(x,y-5),cv2.FONT_HERSHEY_COMPLEX,2,(0,1500),1)
-            #roi_gray = gray[y:y+h, x:x+w]
-            roi_color = image_recieved[y:y+h, x:x+w]
-            cv2.imshow('result',image_recieved0)
-            # cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            ans=[classNo[0],x,y,w,h]
+        ans=[4,x,y,w,h]
+        # print(ans)
+        return ans
 
     # Noting Found
-    else:
-        ans = [-1, -1, -1, -1, -1]
+    
+    ans = [-1, -1, -1, -1, -1]
 
     # Return Results
     return ans
 
 # Get Distance to the object
-def find_distance(DEPTH_IMG, x, y):
+def find_distance(x, y):
+
+    global depth
 
     # Get image data
     try:
-        depth_image = bridge.imgmsg_to_cv2(DEPTH_IMG, "32FC1")
+        depth_image = bridge.imgmsg_to_cv2(depth, "32FC1")
     except CvBridgeError, e:
         print e
 
@@ -193,39 +188,67 @@ def find_distance(DEPTH_IMG, x, y):
     y = int(y)
 
     #Return Distance
-    return depth_image[x][y]
+    return depth_image[y][x]
 
 
 def main():
 
-    ditance_to_rover = 100000
-    distance_to_qs = 100000
+
+    global distance_to_rover
+    global distance_to_qc
+
+    no_of_objects_found = 0
+
+    angle_rotated = 0
+
+    final_angle = 0
 
     # Rotate to Detect Nearby Objects
-    for i in range(36):
-        # rotate_bot()
-        # print("Rotated 10 Degrees")
-        # rospy.sleep(1)
+    for i in range(27):
+        rotate_bot()
+        print("Rotated 10 Degrees")
+        rospy.sleep(1)
 
-        #Get RGB and Depth Data
-        RGB = rospy.wait_for_message('/camera/rgb/image_raw', Image)
+        angle_rotated += 10
 
         #Find Objects if Available
-        result = find_obj(RGB)
+        result = find_obj()
+        print(result)
+
+        if result[3] < 400:
+            result[0] = -1
 
         if result[0] != -1:
-            Depth = rospy.wait_for_message('/camera/depth/image_raw', Image)
-            result_distance = find_distance(Depth, result[1] + result[3]/2, result[2] + result[4]/2)
+            if (result[0] == 1):
+                print("Bowl Detected")
+            elif result[0] == 2:
+                print("Wheel Detected")
+            elif result[0] == 3:
+                print("Mars Rover Detected")
+            else:
+                print("Quadcopter Detected")
+            result_distance = find_distance(result[1] + result[4]/2, result[2] + result[3]/2)
+            # print(result_distance)
 
-        print(find_distance)
+            if result[0] == 3 and distance_to_rover > result_distance:
+                distance_to_rover = result_distance
+                angle_rotated = 0
+            
+            if result[0] == 4 and distance_to_qc > result_distance:
+                distance_to_qc = result_distance
+                final_angle = angle_rotated
+
+    distance_to_qc=distance_to_qc * 3
+    distance_to_rover=distance_to_rover * 3 
 
 # Pose Estimation
-    print(angle_bw,distance_qc,distance_rover)
+    print(final_angle,distance_to_qc,distance_to_rover)
 
-    x, y =  fsolve(equations, (1, 1))
+    x, y =  fsolve(equations, (3, 0))
+    y = y*-1
+    print(x,y)
     theta = math.atan2(qc[0] - x, qc[1] - y)
     theta = theta*-1 + math.pi/2
-    y = y*-1
     print("Estimated")
     print(y,x, theta)
 
@@ -261,6 +284,19 @@ def main():
 
 if __name__ == '__main__':
     rospy.init_node('Kidnapped_Robot')
+    rospy.Subscriber('/camera/rgb/image_raw', Image, rgb_callback)
+
+    data = rospy.wait_for_message('/odom', Odometry)
+
+    global pose
+    x = data.pose.pose.orientation.x
+    y = data.pose.pose.orientation.y
+    z = data.pose.pose.orientation.z
+    w = data.pose.pose.orientation.w
+    pose = [data.pose.pose.position.x, data.pose.pose.position.y, euler_from_quaternion([x,y,z,w])[2]]
+
     rospy.Subscriber('/odom', Odometry, odom_callback)
+    rospy.Subscriber('/camera/depth/image_raw', Image,depth_callback)
+
     # rate = rospy.spin()
     main()
